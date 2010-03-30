@@ -10,6 +10,10 @@
 #
 # Paste any required PEM certificates after the pem key.  
 #
+ach_direct:
+  login: X
+  password: Y
+
 authorize_net:
   login: X
   password: Y
