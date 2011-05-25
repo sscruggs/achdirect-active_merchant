@@ -11,6 +11,7 @@ Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more r
 
 The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] contains a {table of features supported by each gateway}[http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix].
 
+* {ACHDirect}[http://www.achdirect.com/] - US
 * {Authorize.Net CIM}[http://www.authorize.net/] - US
 * {Authorize.Net}[http://www.authorize.net/] - US
 * {Beanstream.com}[http://www.beanstream.com/] - CA
@@ -91,7 +92,7 @@ Installation from RubyGems
 
   > gem install activemerchant
 
-== Sample Usage
+== Sample Usage for credit card payments
   require 'rubygems'
   require 'active_merchant'
 
@@ -130,6 +131,60 @@ Installation from RubyGems
       raise StandardError, response.message 
     end
   end
+
+
+
+
+== Sample Usage for echeck payments
+  require 'rubygems'
+  require 'active_merchant'
+
+  # Use the TrustCommerce test servers
+  ActiveMerchant::Billing::Base.mode = :test
+
+  # ActiveMerchant accepts all amounts as Integer values in cents
+  # $10.00
+  amount = 1000
+
+  # Fill in echeck info
+  echeck = ActiveMerchant::Billing::Check.new(
+                  :first_name        	=> 'Bob',
+                  :last_name          	=> 'Bobsen',
+                  :routing_number     	=> '4242424242424242',
+                  :account_number     	=> '12345678',
+                  :account_holder_type 	=> 'Business',
+                  :account_type 	=> 'Checking'
+                )
+
+  billing_address = { :first_name => 'Bob',
+		      :last_name => 'Beobsen',
+		      :address1 => '1313 Mockingbird Land',
+		      :address2 => 'Sweet 1',
+		      :city => 'Transylvania',
+		      :state => 'PA',
+		      :country => 'US',
+		      :zip => bank_account.bill_to_zip}
+
+
+
+  # Validating the bank routing number
+  if echeck.valid_routing_number?
+    gateway = ActiveMerchant::Billing::AchDirectGateway.new(:login => $ACHDIRECT_LOGIN, :password => $ACHDIRECT_PASSWORD)
+
+    # Process payment	
+    response = gateway.eft_purchase(amount, echeck, :ip=>request.remote_ip, :billing_address=> billing_address)
+
+    if response.success?
+      gateway.capture(amount, response.authorization)
+      flash[:notice] = "Successfully charged $#{amount} to the bank account #{params[:bank_account][account_number]}"
+    else
+      raise StandardError, response.message 
+    end
+  end
+
+
+
+
 
 == Contributing
 

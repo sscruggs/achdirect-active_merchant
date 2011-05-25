@@ -24,6 +24,15 @@ module ActiveMerchant #:nodoc:
       CREDIT = 13
       VOID = 14
       PRE_AUTH = 15
+
+      #EFT TRANSACTION_CODES
+      EFT_SALE = 20
+      EFT_AUTH_ONLY = 21
+      EFT_CAPTURE = 22
+      EFT_CREDIT = 23
+      EFT_VOID = 24
+      EFT_FORCE = 25
+      EFT_VERIFY_ONLY = 26
   
       #RESPONSE PREFIXES
       APPROVED = "A"
@@ -73,6 +82,17 @@ module ActiveMerchant #:nodoc:
         commit(SALE, money, post)
       end
  
+      def eft_purchase(money, bank_account, options = {})
+        post = {}
+        add_invoice(post, options)
+        add_bank_account(post, bank_account)
+        add_address(post, bank_account, options)
+        add_customer_data(post, options)
+         
+#        commit(SALE, money, post)
+        commit(EFT_SALE, money, post)
+      end
+
       def capture(money, authorization, options = {})
         post = {:trans_id => authorization}
         add_customer_data(post, options)
@@ -118,6 +138,14 @@ module ActiveMerchant #:nodoc:
         post[:ecom_payment_card_name] = creditcard.name
       end
   
+      def add_bank_account(post, bank_account)
+        post[:ecom_payment_check_trn] = bank_account.routing_number
+        post[:ecom_payment_check_account] = bank_account.account_number
+        post[:ecom_payment_check_account_type] = bank_account.account_type
+        post[:ecom_payment_check_checkno] = ''
+        post[:pg_entry_class_code] = 'WEB'
+      end
+
       def post_data(action, parameters = {})
         post = {}
  
